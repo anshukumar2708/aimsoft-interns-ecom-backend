@@ -1,7 +1,7 @@
 const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const s3 = require("../config/s3Client");
 
-const uploadTOS3 = async (file, folder = "uploads") => {
+const uploadTOS3 = async (file, folder = "images") => {
     const fileKey = `${folder}/${Date.now()}-${file.originalname}`;
 
     const command = new PutObjectCommand({

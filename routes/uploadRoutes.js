@@ -4,6 +4,6 @@ const upload = require("../middleware/multer");
 
 const Router = express.Router();
 
-Router.post("/upload", upload.single("file"), uploadFile);
+Router.post("/upload-single-image", upload.single("file"), uploadFile);
 
 module.exports = Router;
