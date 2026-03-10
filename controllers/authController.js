@@ -320,7 +320,6 @@ exports.sendMobileOtp = async (req, res) => {
     }
 }
 
-
 exports.verifyMobile = async (req, res) => {
     try {
         const { mobile, code } = req.body;
@@ -394,10 +393,54 @@ exports.verifyMobile = async (req, res) => {
     }
 };
 
-exports.loginWithGoogle = async (req, res) => {
+exports.changePassword = async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    try {
+        const id = req?.user?._id;
+        const existingUser = await User.findOne({ _id: id });
 
+
+        if (!existingUser) {
+            return res.status(404).json({
+                status: "error",
+                message: "User not found"
+            });
+        }
+
+        const isPasswordMatched = await existingUser.isPasswordMatched(currentPassword);
+
+        if (!isPasswordMatched) {
+            return res.status(400).json({
+                status: "error",
+                message: "Current password is not correct"
+            });
+        }
+
+        const isSamePassword = await existingUser.isPasswordMatched(newPassword);
+
+        if (isSamePassword) {
+            return res.status(400).json({
+                status: "error",
+                message: "New password cannot be same as current password"
+            });
+        }
+
+        existingUser.password = newPassword;
+
+        await existingUser.save();
+
+        return res.status(200).json({ status: "success", message: "Password change successfully" });
+
+    } catch (error) {
+        return res.status(400).json({ status: "error", message: error?.message })
+    }
 }
 
-exports.loginWithFaceBook = async (req, res) => {
+// exports.loginWithGoogle = async (req, res) => {
 
-}
+// }
+
+// exports.loginWithFaceBook = async (req, res) => {
+
+// }
+
