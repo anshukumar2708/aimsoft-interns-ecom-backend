@@ -76,8 +76,12 @@ UserSchema.pre("save", async function (next) {
 });
 
 UserSchema.methods.generateToken = async function () {
+    const userObject = this.toObject();
+
+    delete userObject.password;
+
     return jwt.sign(
-        { _id: this._id, email: this.email, mobile: this.mobile },
+        userObject,
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN }
     );
