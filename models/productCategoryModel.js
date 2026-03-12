@@ -9,7 +9,7 @@ const ProductCategorySchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        required: [true, "Name is required"],
+        required: [true, "Image is required"],
         trim: true,
     },
     description: {
