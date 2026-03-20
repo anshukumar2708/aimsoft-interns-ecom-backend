@@ -15,46 +15,89 @@ exports.addProductCategory = async (req, res) => {
 
 exports.getProductCategory = async (req, res) => {
     try {
-        const { search, page, limit } = req.query;
-
-        const filter = {};
+        const { search, page, limit, isActive } = req.query;
 
         const pageNumber = Number(page) || 1;
         const limitNumber = Number(limit) || 10;
         const skipData = (pageNumber - 1) * limitNumber;
 
-        if (search) {
-            filter.$or = [
-                { name: { $regex: search, $options: "i" } },
-                { description: { $regex: search, $options: "i" } },
-            ]
-        }
+        const matchStage = {
+            ...(search && {
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { description: { $regex: search, $options: "i" } },
+                ],
+            }),
+            ...(typeof isActive !== "undefined" && {
+                isActive: isActive,
+            }),
+        };
 
         // First Method separate
-        // const totalCount = await ProductCategory.countDocuments(filter);
+        // const totalCount = await ProductCategory.countDocuments(matchStage);
         // const allProductCategory = await ProductCategory.find(filter)
         //     .skip(skipData)
         //     .limit(limitNumber)
         //     .sort({ createdAt: -1 })
         //     .lean();
 
-        const [totalCount, allProductCategory] = await Promise.all([
-            ProductCategory.countDocuments(filter),
-            ProductCategory.find(filter)
-                .skip(skipData)
-                .limit(limitNumber)
-                .sort({ createdAt: -1 })
-                .lean()
-        ])
+        // Second Method
+        // const [totalCount, allProductCategory] = await Promise.all([
+        //     ProductCategory.countDocuments(matchStage),
+        //     ProductCategory.find(matchStage)
+        //         .skip(skipData)
+        //         .limit(limitNumber)
+        //         .sort({ createdAt: -1 })
+        //         .lean()
+        // ])
 
-        const data = {
-            data: allProductCategory,
-            totalCount,
+        // Third method by aggregation method
+        const [result] = await ProductCategory.aggregate([
+            { $match: matchStage },
+
+            {
+                $facet: {
+                    data: [
+                        { $sort: { createdAt: -1, _id: -1 } },
+                        { $skip: skipData },
+                        { $limit: limitNumber },
+                        {
+                            $project: {
+                                createdAt: 1,
+                                description: 1,
+                                displayOrder: 1,
+                                image: 1,
+                                isActive: 1,
+                                name: 1,
+                                updatedAt: 1,
+                            },
+                        },
+                    ],
+                    totalCount: [{ $count: "count" }],
+                },
+            },
+
+            {
+                $project: {
+                    data: 1,
+                    totalCount: {
+                        $ifNull: [
+                            { $arrayElemAt: ["$totalCount.count", 0] }
+                            , 0
+                        ],
+                    },
+                },
+            },
+        ]);
+
+        const responseData = {
+            data: result?.data,
             currentPage: Number(page),
-            totalPages: Math.ceil(totalCount / limit)
+            totalCount: result?.totalCount,
+            totalPages: Math.ceil(result?.totalCount / limitNumber),
         }
 
-        return successResponse(res, "Category get successfully", data);
+        return successResponse(res, "Category get successfully", responseData);
 
     } catch (error) {
         console.error("Category get error:", error);
