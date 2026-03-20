@@ -9,7 +9,7 @@ const ProductCategorySchema = new mongoose.Schema({
     },
     image: {
         type: String,
-        required: [true, "Image is required"],
+        // required: [true, "Image is required"],
         trim: true,
     },
     description: {
@@ -19,6 +19,10 @@ const ProductCategorySchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true
+    },
+    displayOrder: {
+        type: Number,
+        default: null
     }
 },
     { timestamps: true }

@@ -1,5 +1,4 @@
 const ProductCategory = require("../../models/productCategoryModel");
-const { options } = require("../../routes/productRoutes");
 const { successResponse, errorResponse } = require("../../utils/responseHandler");
 
 exports.addProductCategory = async (req, res) => {
@@ -12,7 +11,6 @@ exports.addProductCategory = async (req, res) => {
         console.error("Category create error:", error);
         return errorResponse(res, error.message)
     }
-
 }
 
 exports.getProductCategory = async (req, res) => {
@@ -32,9 +30,31 @@ exports.getProductCategory = async (req, res) => {
             ]
         }
 
-        const allProductCategory = await ProductCategory.find(filter).skip(skipData).limit(limitNumber);
+        // First Method separate
+        // const totalCount = await ProductCategory.countDocuments(filter);
+        // const allProductCategory = await ProductCategory.find(filter)
+        //     .skip(skipData)
+        //     .limit(limitNumber)
+        //     .sort({ createdAt: -1 })
+        //     .lean();
 
-        return successResponse(res, "Category get successfully", allProductCategory);
+        const [totalCount, allProductCategory] = await Promise.all([
+            ProductCategory.countDocuments(filter),
+            ProductCategory.find(filter)
+                .skip(skipData)
+                .limit(limitNumber)
+                .sort({ createdAt: -1 })
+                .lean()
+        ])
+
+        const data = {
+            data: allProductCategory,
+            totalCount,
+            currentPage: Number(page),
+            totalPages: Math.ceil(totalCount / limit)
+        }
+
+        return successResponse(res, "Category get successfully", data);
 
     } catch (error) {
         console.error("Category get error:", error);
