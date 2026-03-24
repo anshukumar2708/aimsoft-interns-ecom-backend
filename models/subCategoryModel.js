@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const ProductCategorySchema = new mongoose.Schema({
+const ProductSubCategorySchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, "Name is required"],
@@ -11,7 +11,7 @@ const ProductCategorySchema = new mongoose.Schema({
         type: String,
         required: [true, "slug is required"],
         trim: true,
-        minlength: [3, "slug must be at least 3 characters"],
+        minlength: [3, "Name must be at least 3 characters"],
     },
     image: {
         type: String,
@@ -34,4 +34,4 @@ const ProductCategorySchema = new mongoose.Schema({
     { timestamps: true }
 )
 
-module.exports = mongoose.model("ProductCategory", ProductCategorySchema)
+module.exports = mongoose.model("subCategory", ProductSubCategorySchema)

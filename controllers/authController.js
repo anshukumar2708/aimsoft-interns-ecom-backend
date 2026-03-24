@@ -119,11 +119,15 @@ exports.login = async (req, res) => {
 
         delete userObj.password
 
-        return res.status(200).json({
+        const responseData = {
             status: "success",
             message: "Login successful",
             token: token,
             data: userObj
+        }
+
+        return res.status(200).json({
+            data: responseData
         })
 
     } catch (error) {
