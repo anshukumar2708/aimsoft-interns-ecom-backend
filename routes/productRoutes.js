@@ -1,7 +1,7 @@
 const express = require("express");
 const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
 const { addProductCategory, getProductCategory, deleteProductCategory, updateProductCategory } = require("../controllers/product/productCategoryController");
-const { addProductSubCategory, getProductSubCategory } = require("../controllers/product/subCategory");
+const { addProductSubCategory, getProductSubCategory, deleteProductSubCategory, updateProductSubCategory } = require("../controllers/product/subCategory");
 
 
 const Router = express.Router();
@@ -20,6 +20,10 @@ Router.patch("/category/:id", authMiddleware, isAdmin, updateProductCategory);
 Router.post("/sub-category", authMiddleware, isAdmin, addProductSubCategory);
 
 Router.get("/sub-category", authMiddleware, getProductSubCategory);
+
+Router.delete("/sub-category", authMiddleware, isAdmin, deleteProductSubCategory);
+
+Router.patch("/sub-category", authMiddleware, isAdmin, updateProductSubCategory);
 
 
 module.exports = Router;

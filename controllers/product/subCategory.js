@@ -147,3 +147,41 @@ exports.getProductSubCategory = async (req, res) => {
     }
 }
 
+exports.deleteProductSubCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const deleteSubCategory = SubCategory.findByIdAndUpdate({ _id: id });
+
+        if (!deleteSubCategory) {
+            return errorResponse(res, "Subcategory not found", 404);
+        }
+
+        return successResponse(res, "Category delete successfully", deleteSubCategory);
+    } catch (error) {
+        return errorResponse(res, error.message);
+    }
+}
+
+exports.updateProductSubCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const playLoad = req.body;
+
+        const updateSubCategory = SubCategory.findByIdAndUpdate(
+            id,
+            playLoad,
+            { new: true, runValidators: true }
+        )
+
+        if (!updateSubCategory) {
+            return errorResponse(res, "Subcategory not found", 404);
+        }
+
+        return successResponse(res, "Category update successfully", updateSubCategory);
+    } catch (error) {
+        return errorResponse(res, error.message);
+    }
+
+}
+
