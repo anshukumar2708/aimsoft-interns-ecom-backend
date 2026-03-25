@@ -3,22 +3,44 @@ const { successResponse, errorResponse } = require("../../utils/responseHandler"
 
 exports.addProductCategory = async (req, res) => {
     try {
-        const payLoad = req.body;
-        const newCategory = new ProductCategory(payLoad);
-        const savedCategory = await newCategory.save();
+
+        const { name, slug, ...rest } = req.body;
+
+        const existing = await ProductCategory.findOne({
+            $or: [
+                { name },
+                { slug }
+            ]
+        })
+
+        if (existing) {
+            if (existing.name === name) {
+                return errorResponse(res, `${name} already added`, 400);
+            }
+            if (existing.slug === slug) {
+                return errorResponse(res, `${slug} slug already added`, 400);
+            }
+        }
+
+        const savedCategory = await ProductCategory.create({
+            name,
+            slug,
+            ...rest
+        });
+
         return successResponse(res, "Category added successfully", savedCategory);
     } catch (error) {
         console.error("Category create error:", error);
-        return errorResponse(res, error.message)
+        return errorResponse(res, error.message);
     }
-}
+};
 
 exports.getProductCategory = async (req, res) => {
     try {
         const { search, page, limit, isActive } = req.query;
 
-        const pageNumber = Number(page) || 1;
-        const limitNumber = Number(limit) || 10;
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
         const skipData = (pageNumber - 1) * limitNumber;
 
         const matchStage = {
@@ -32,6 +54,30 @@ exports.getProductCategory = async (req, res) => {
                 isActive: isActive,
             }),
         };
+
+        const dataPipeline = [
+            { $sort: { createdAt: -1, _id: -1, displayOrder: -1 } }
+        ];
+
+        // Apply pagination only if limitNumber exists
+        if (limitNumber) {
+            dataPipeline.push(
+                { $skip: skipData || 0 },
+                { $limit: limitNumber }
+            );
+        }
+
+        dataPipeline.push({
+            $project: {
+                createdAt: 1,
+                description: 1,
+                displayOrder: 1,
+                image: 1,
+                isActive: 1,
+                name: 1,
+                updatedAt: 1,
+            },
+        });
 
         // First Method separate
         // const totalCount = await ProductCategory.countDocuments(matchStage);
@@ -54,42 +100,21 @@ exports.getProductCategory = async (req, res) => {
         // Third method by aggregation method
         const [result] = await ProductCategory.aggregate([
             { $match: matchStage },
-
             {
                 $facet: {
-                    data: [
-                        { $sort: { createdAt: -1, _id: -1 } },
-                        { $skip: skipData },
-                        { $limit: limitNumber },
-                        {
-                            $project: {
-                                createdAt: 1,
-                                description: 1,
-                                displayOrder: 1,
-                                image: 1,
-                                isActive: 1,
-                                name: 1,
-                                updatedAt: 1,
-                            },
-                        },
-                    ],
+                    data: dataPipeline,
                     totalCount: [{ $count: "count" }],
                 },
             },
-
             {
                 $project: {
                     data: 1,
                     totalCount: {
-                        $ifNull: [
-                            { $arrayElemAt: ["$totalCount.count", 0] }
-                            , 0
-                        ],
+                        $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0],
                     },
                 },
             },
         ]);
-
         const responseData = {
             data: result?.data,
             currentPage: Number(page),

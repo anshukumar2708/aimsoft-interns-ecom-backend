@@ -39,10 +39,111 @@ exports.addProductSubCategory = async (req, res) => {
 
 exports.getProductSubCategory = async (req, res) => {
     try {
-        const allSubCategory = await SubCategory.find();
-        return successResponse(res, "Sub category get successfully", allSubCategory);
+        const { search, page, limit, isActive } = req.query;
+
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+        const skipData = (pageNumber - 1) * limitNumber || 0;
+
+        // first method
+        // const allSubCategory = await SubCategory.aggregate([
+        //     {
+        //         $match: {
+        //             ...(search && {
+        //                 $or: [
+        //                     { name: { $regex: search, $options: "i" } },
+        //                     { description: { $regex: search, $options: "i" } }
+        //                 ]
+        //             }),
+        //             ...(typeof isActive !== "undefined" && {
+        //                 isActive: isActive === "true"
+        //             })
+        //         }
+        //     },
+        //     {
+        //         $facet: {
+        //             data: [
+        //                 { $sort: { displayOrder: -1, createdAt: -1 } },
+        //                 { $skip: skipData },
+        //                 { $limit: limitNumber }
+        //             ],
+        //             totalCount: [
+        //                 { $count: "count" }
+        //             ]
+        //         }
+        //     },
+        //     {
+        //         $project: {
+        //             data: 1,
+        //             totalCount: {
+        //                 $ifNull: [
+        //                     { $arrayElemAt: ["$totalCount.count", 0] },
+        //                     0
+        //                 ]
+        //             }
+        //         }
+        //     }
+        // ]);
+
+
+        // second method
+
+
+        const matchStage = {
+            ...(search && {
+                $or: [
+                    { name: { $regex: search, $options: "i" } },
+                    { description: { $regex: search, $options: "i" } }
+                ]
+            }),
+
+            ...(typeof isActive !== "undefined" && {
+                isActive: isActive === "true"
+            })
+        }
+
+        const dataPipeline = [
+            { $sort: { displayOrder: -1, createdAt: -1, _id: -1 } }
+        ]
+
+        if (limitNumber) {
+            dataPipeline.push(
+                { $skip: skipData },
+                { $limit: limitNumber }
+            )
+        }
+
+        const [result] = await SubCategory.aggregate([
+            { $match: matchStage },
+            {
+                $facet: {
+                    data: dataPipeline,
+                    totalCount: [
+                        { $count: "count" }
+                    ],
+                },
+            },
+            {
+                $project: {
+                    data: 1,
+                    totalCount: {
+                        $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0],
+                    },
+                },
+            },
+        ]);
+
+        const responseData = {
+            data: result?.data,
+            currentPage: Number(page),
+            totalCount: result?.totalCount,
+            totalPages: Math.ceil(result?.totalCount / limitNumber),
+        }
+
+        return successResponse(res, "Sub category get successfully", responseData);
     } catch (error) {
         console.error("Category create error:", error);
         return errorResponse(res, error.message)
     }
 }
+

@@ -6,12 +6,14 @@ const ProductSubCategorySchema = new mongoose.Schema({
         required: [true, "Name is required"],
         trim: true,
         minlength: [3, "Name must be at least 3 characters"],
+        unique: true
     },
     slug: {
         type: String,
         required: [true, "slug is required"],
         trim: true,
         minlength: [3, "Name must be at least 3 characters"],
+        unique: true
     },
     image: {
         type: String,
