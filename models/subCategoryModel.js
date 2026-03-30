@@ -24,6 +24,11 @@ const ProductSubCategorySchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    categoryId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "ProductCategory",
+        required: [true, "Category is required"]
+    },
     isActive: {
         type: Boolean,
         default: true
@@ -36,4 +41,4 @@ const ProductSubCategorySchema = new mongoose.Schema({
     { timestamps: true }
 )
 
-module.exports = mongoose.model("subCategory", ProductSubCategorySchema)
+module.exports = mongoose.model("SubCategory", ProductSubCategorySchema)

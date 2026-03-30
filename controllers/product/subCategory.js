@@ -85,44 +85,121 @@ exports.getProductSubCategory = async (req, res) => {
         //     }
         // ]);
 
-
         // second method
 
+        // const matchStage = {
+        //     ...(search && {
+        //         $or: [
+        //             { name: { $regex: search, $options: "i" } },
+        //             { description: { $regex: search, $options: "i" } }
+        //         ]
+        //     }),
 
-        const matchStage = {
-            ...(search && {
-                $or: [
-                    { name: { $regex: search, $options: "i" } },
-                    { description: { $regex: search, $options: "i" } }
-                ]
-            }),
+        //     ...(typeof isActive !== "undefined" && {
+        //         isActive: isActive === "true"
+        //     })
+        // }
 
-            ...(typeof isActive !== "undefined" && {
-                isActive: isActive === "true"
-            })
-        }
+        // const dataPipeline = [
+        //     { $sort: { displayOrder: -1, createdAt: -1, _id: -1 } }
+        // ]
 
-        const dataPipeline = [
-            { $sort: { displayOrder: -1, createdAt: -1, _id: -1 } }
-        ]
+        // if (limitNumber) {
+        //     dataPipeline.push(
+        //         { $skip: skipData },
+        //         { $limit: limitNumber }
+        //     )
+        // }
 
-        if (limitNumber) {
-            dataPipeline.push(
-                { $skip: skipData },
-                { $limit: limitNumber }
-            )
-        }
+        // const [result] = await SubCategory.aggregate([
+        //     { $match: matchStage },
+        //     {
+        //         $facet: {
+        //             data: dataPipeline,
+        //             totalCount: [
+        //                 { $count: "count" }
+        //             ],
+        //         },
+        //     },
+        //     {
+        //         $project: {
+        //             data: 1,
+        //             totalCount: {
+        //                 $ifNull: [{ $arrayElemAt: ["$totalCount.count", 0] }, 0],
+        //             },
+        //         },
+        //     },
+        // ]);
 
         const [result] = await SubCategory.aggregate([
-            { $match: matchStage },
             {
+                // STEP 1: MATCH
+                $match: {
+                    ...(search && {
+                        $or: [
+                            { name: { $regex: search, $options: "i" } },
+                            { description: { $regex: search, $options: "i" } }
+                        ]
+                    }),
+                    ...(typeof isActive !== "undefined" && {
+                        isActive: isActive === "true"
+                    })
+                }
+            },
+
+            {
+                // STEP 2: FACET
                 $facet: {
-                    data: dataPipeline,
+                    data: [
+                        { $sort: { displayOrder: -1, createdAt: -1, _id: -1 } },
+
+                        ...(skipData ? [{ $skip: skipData }] : []),
+                        ...(limitNumber ? [{ $limit: limitNumber }] : []),
+
+                        // LOOKUP
+                        {
+                            // $lookup: {
+                            //     from: "productcategories",
+                            //     localField: "categoryId",
+                            //     foreignField: "_id",
+                            //     as: "category"
+                            // }
+
+                            $lookup: {
+                                from: "productcategories",
+                                localField: "categoryId",
+                                foreignField: "_id",
+                                let: { categoryId: "$categoryId" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: { $eq: ["$_id", "$$categoryId"] }
+                                        }
+                                    },
+                                    {
+                                        $project: {
+                                            _id: 1,
+                                            name: 1
+                                        }
+                                    }
+                                ],
+                                as: "category"
+                            }
+                        },
+
+                        {
+                            $unwind: {
+                                path: "$category",
+                                preserveNullAndEmptyArrays: true
+                            }
+                        }
+                    ],
                     totalCount: [
                         { $count: "count" }
-                    ],
-                },
+                    ]
+                }
             },
+
             {
                 $project: {
                     data: 1,
@@ -151,13 +228,13 @@ exports.deleteProductSubCategory = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const deleteSubCategory = SubCategory.findByIdAndUpdate({ _id: id });
+        const deleteSubCategory = await SubCategory.findByIdAndDelete({ _id: id });
 
         if (!deleteSubCategory) {
             return errorResponse(res, "Subcategory not found", 404);
         }
 
-        return successResponse(res, "Category delete successfully", deleteSubCategory);
+        return successResponse(res, "Subcategory deleted successfully", deleteSubCategory);
     } catch (error) {
         return errorResponse(res, error.message);
     }
@@ -168,7 +245,7 @@ exports.updateProductSubCategory = async (req, res) => {
         const { id } = req.params;
         const playLoad = req.body;
 
-        const updateSubCategory = SubCategory.findByIdAndUpdate(
+        const updateSubCategory = await SubCategory.findByIdAndUpdate(
             id,
             playLoad,
             { new: true, runValidators: true }

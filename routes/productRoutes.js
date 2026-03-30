@@ -21,9 +21,9 @@ Router.post("/sub-category", authMiddleware, isAdmin, addProductSubCategory);
 
 Router.get("/sub-category", authMiddleware, getProductSubCategory);
 
-Router.delete("/sub-category", authMiddleware, isAdmin, deleteProductSubCategory);
+Router.delete("/sub-category/:id", authMiddleware, isAdmin, deleteProductSubCategory);
 
-Router.patch("/sub-category", authMiddleware, isAdmin, updateProductSubCategory);
+Router.patch("/sub-category/:id", authMiddleware, isAdmin, updateProductSubCategory);
 
 
 module.exports = Router;
