@@ -3,10 +3,14 @@ const { errorResponse, successResponse } = require("../utils/responseHandler");
 
 exports.uploadSingleFile = async (req, res) => {
     try {
-        if (!req.file) {
+        const { folder } = req.body;
+        console.log("req.body", req.body);
+        console.log("file in controller", req.file);
+        console.log("folder in controller", folder);
+        if (!req?.file) {
             return res.status(400).json({ message: "No file uploaded" });
         }
-        const result = await uploadTOS3(req.file, "images/categories");
+        const result = await uploadTOS3(req.file, folder || "images/categories");
 
         return successResponse(res, "File uploaded successfully", result);
     } catch (error) {

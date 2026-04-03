@@ -67,17 +67,17 @@ exports.getProductCategory = async (req, res) => {
             );
         }
 
-        dataPipeline.push({
-            $project: {
-                createdAt: 1,
-                description: 1,
-                displayOrder: 1,
-                image: 1,
-                isActive: 1,
-                name: 1,
-                updatedAt: 1,
-            },
-        });
+        // dataPipeline.push({
+        //     $project: {
+        //         createdAt: 1,
+        //         description: 1,
+        //         displayOrder: 1,
+        //         image: 1,
+        //         isActive: 1,
+        //         name: 1,
+        //         updatedAt: 1,
+        //     },
+        // });
 
         // First Method separate
         // const totalCount = await ProductCategory.countDocuments(matchStage);
