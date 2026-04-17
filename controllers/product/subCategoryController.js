@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const SubCategory = require("../../models/subCategoryModel");
 const { errorResponse, successResponse } = require("../../utils/responseHandler");
 
@@ -39,7 +40,7 @@ exports.addProductSubCategory = async (req, res) => {
 
 exports.getProductSubCategory = async (req, res) => {
     try {
-        const { search, page, limit, isActive } = req.query;
+        const { search, page, limit, isActive, categoryId } = req.query;
 
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
@@ -141,6 +142,7 @@ exports.getProductSubCategory = async (req, res) => {
                             { description: { $regex: search, $options: "i" } }
                         ]
                     }),
+                    ...(categoryId && { categoryId: new mongoose.Types.ObjectId(categoryId) }),
                     ...(typeof isActive !== "undefined" && {
                         isActive: isActive === "true"
                     })
@@ -151,7 +153,7 @@ exports.getProductSubCategory = async (req, res) => {
                 // STEP 2: FACET
                 $facet: {
                     data: [
-                        { $sort: { displayOrder: -1, createdAt: -1, _id: -1 } },
+                        { $sort: { displayOrder: 1, createdAt: 1, _id: 1 } },
 
                         ...(skipData ? [{ $skip: skipData }] : []),
                         ...(limitNumber ? [{ $limit: limitNumber }] : []),
@@ -255,7 +257,7 @@ exports.updateProductSubCategory = async (req, res) => {
             return errorResponse(res, "Subcategory not found", 404);
         }
 
-        return successResponse(res, "Category update successfully", updateSubCategory);
+        return successResponse(res, "Subcategory update successfully", updateSubCategory);
     } catch (error) {
         return errorResponse(res, error.message);
     }
