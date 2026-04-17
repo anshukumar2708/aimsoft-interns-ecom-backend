@@ -1,7 +1,7 @@
 // models/Brand.js
 const mongoose = require("mongoose");
 
-const brandSchema = new mongoose.Schema(
+const colorSchema = new mongoose.Schema(
     {
         name: {
             type: String,
@@ -17,16 +17,6 @@ const brandSchema = new mongoose.Schema(
         image: {
             type: String,
             default: "",
-        },
-        category: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "ProductCategory",
-            required: true,
-        },
-        subCategory: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "SubCategory",
-            required: true,
         },
         description: {
             type: String,
@@ -44,4 +34,4 @@ const brandSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports = mongoose.model("Brand", brandSchema);
+module.exports = mongoose.model("Color", colorSchema);

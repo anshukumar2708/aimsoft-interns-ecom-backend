@@ -1,20 +1,18 @@
-const Brand = require("../../models/brandModel");
+const Color = require("../../models/colorModel");
 
-exports.addBrand = async (req, res) => {
+exports.addColor = async (req, res) => {
     try {
         const {
             name,
             slug,
             image,
-            category,
-            subCategory,
             description,
             isActive,
             displayOrder,
         } = req.body;
 
         // Check duplicate
-        const existing = await Brand.findOne({
+        const existing = await Color.findOne({
             $or: [
                 { name: name },
                 { slug: slug }
@@ -24,34 +22,32 @@ exports.addBrand = async (req, res) => {
         if (existing) {
             return res.status(400).json({
                 success: false,
-                message: "Brand already exists",
+                message: "Color already exists",
             });
         }
 
-        const brand = new Brand({
+        const color = new Color({
             name,
             slug,
             image,
-            category,
-            subCategory,
             description,
             isActive,
             displayOrder,
         });
 
-        await brand.save();
+        await color.save();
 
         res.status(201).json({
             success: true,
-            message: "Brand created successfully",
-            data: brand,
+            message: "Color Added successfully",
+            data: color,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-exports.getBrands = async (req, res) => {
+exports.getColors = async (req, res) => {
     try {
         const { search, page = 1, limit = 10, isActive } = req.query;
 
@@ -63,78 +59,79 @@ exports.getBrands = async (req, res) => {
                 { slug: { $regex: search, $options: "i" } }
             ];
         }
+
         if (isActive !== undefined) {
             filter.isActive = isActive === "true";
         }
 
         const skip = (Number(page) - 1) * Number(limit);
 
-        const brands = await Brand.find(filter)
-            .populate("category", "name slug")
-            .populate("subCategory", "name slug")
+        const colors = await Color.find(filter)
             .sort({ displayOrder: 1, createdAt: -1 })
             .skip(skip)
             .limit(Number(limit));
 
         res.status(200).json({
             success: true,
-            count: brands.length,
-            data: brands,
+            count: colors.length,
+            data: colors,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 }
 
-exports.deleteBrand = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const brand = await Brand.findByIdAndDelete(id);
-
-        if (!brand) {
-            return res.status(404).json({
-                success: false,
-                message: "Brand not found",
-            });
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Brand deleted successfully",
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-}
-
-exports.updateBrand = async (req, res) => {
+exports.updateColor = async (req, res) => {
     try {
         const { id } = req.params;
 
         const updateData = { ...req.body };
 
-        const brand = await Brand.findByIdAndUpdate(id, updateData, {
+        const color = await Color.findByIdAndUpdate(id, updateData, {
             new: true,
             runValidators: true,
         });
 
-        if (!brand) {
+        if (!color) {
             return res.status(404).json({
                 success: false,
-                message: "Brand not found",
+                message: "Color not found",
             });
         }
 
         res.status(200).json({
             success: true,
-            message: "Brand updated successfully",
-            data: brand,
+            message: "Color updated successfully",
+            data: color,
         });
     } catch (error) {
-        console.log("Error updating brand:", error);
+        console.log("Error updating color:", error);
     }
 }
+
+
+exports.deleteColor = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const color = await Color.findByIdAndDelete(id);
+
+        if (!color) {
+            return res.status(404).json({
+                success: false,
+                message: "Color not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Color deleted successfully",
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
 
 
 

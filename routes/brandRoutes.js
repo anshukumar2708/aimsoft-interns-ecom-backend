@@ -8,7 +8,7 @@ const Router = express.Router();
 
 Router.post("/add", authMiddleware, isAdmin, addBrand);
 Router.get("/list", getBrands);
-Router.put("/update/:id", authMiddleware, isAdmin, updateBrand);
+Router.patch("/update/:id", authMiddleware, isAdmin, updateBrand);
 Router.delete("/delete/:id", authMiddleware, isAdmin, deleteBrand);
 
 

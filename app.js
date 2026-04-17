@@ -7,6 +7,7 @@ const s3Routes = require("./routes/s3Routes");
 // Product
 const productRoutes = require("./routes/productRoutes");
 const brandRoutes = require("./routes/brandRoutes")
+const colorRoutes = require("./routes/colorRoutes")
 
 
 dotenv.config();
@@ -32,6 +33,9 @@ app.use("/product", productRoutes);
 
 // brand
 app.use("/brand", brandRoutes);
+
+// color
+app.use("/color", colorRoutes);
 
 
 module.exports = app;
